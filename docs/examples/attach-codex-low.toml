@@ -1,0 +1,10 @@
+profile_id = "codex-low"
+backend = "codex"
+advisor_model = "gpt-5.4-mini"
+advisor_effort = "low"
+mode = "auto"
+advisor_display = "inline"
+quick_regex = "계속|진행|continue"
+quick_reply = "진행해."
+confirm_timeout = 20
+advisor_timeout = 60

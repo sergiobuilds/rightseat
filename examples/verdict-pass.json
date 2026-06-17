@@ -1,0 +1,4 @@
+{
+  "status": "PASS",
+  "reason": "Raw tests exit code is 0 and the collected artifacts satisfy the frozen contract."
+}

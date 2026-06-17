@@ -1,0 +1,14 @@
+[project]
+name = "rightseat"
+version = "0.1.0"
+description = "A visible AI operator that sits beside your AI worker"
+requires-python = ">=3.11"
+dependencies = []
+license = "MIT"
+
+[project.scripts]
+rightseat = "clone_driver.cli:rightseat_entrypoint"
+clone-driver = "clone_driver.cli:entrypoint"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

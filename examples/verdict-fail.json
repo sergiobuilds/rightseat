@@ -1,0 +1,4 @@
+{
+  "status": "FAIL",
+  "reason": "The raw artifact packet shows a fixable mismatch against the frozen contract."
+}
