@@ -1,7 +1,7 @@
 ---
 doc_kind: explanation
 status: canonical
-version: 2026-06-20_v1
+version: 2026-06-21_v1.2
 canonical_path: self
 ---
 
@@ -14,6 +14,12 @@ canonical_path: self
 > - 2026-06-20 v1: 최초 박제.
 > - 2026-06-20 v1.1: 검사관 머리(파싱·흐름·외부대조) 운반 독립 완성. "다음=tmux attach 배선"은
 >   버린 길로의 회귀라 폐기 → "다음=Sidabari 몸 통합". workdir는 PTY 소유면 자명(tmux 감지 금지) 명시.
+> - 2026-06-21 v1.2: 실측으로 3건 확정. ① 몸=**sidabari4loop**(원본 아님 — 원본은 비보북 빌드
+>   지옥[rust 4버전 실패·release exe 없음]=실행 불가, 4loop은 깔끔). ② 검사관=**단순 프롬프트**
+>   (seed+증거→맞나/교정 한 줄, claude·codex 교체 실측) — completion_gate 복잡 파이프라인 폐기.
+>   ③ 구조=**비보북 GUI + elitedesk worker(ssh)**, worker는 claude 외(codex 등)도 — auto_start
+>   끄면 셸에서 임의 worker 직접. (이번 세션 반복 실수: 정본·구조를 1회 안 떠올리고 즉흥 반사로
+>   움직임 → 빈 동작. 정본은 rules 1.6.1, 여기 박지 않음.)
 
 ## 중심 의도 (한 줄)
 
@@ -26,17 +32,17 @@ canonical_path: self
 
 ## 수단 (어떻게)
 
-- **몸 = Sidabari 그대로.** 공장(PTY 소유·GUI·자율 루프 골격·증거 캡처)을 베이스로 쓰고 "검사 자리" 한 곳만 개조. 처음부터 다시 안 만든다.
+- **몸 = sidabari4loop 그대로.** 공장(PTY 소유·GUI·자율 루프 골격·증거 캡처)을 베이스로 쓰고 "검사 자리" 한 곳만 개조. 처음부터 다시 안 만든다. (원본 sidabari 아님 — 실측 확정: 원본은 비보북에서 빌드 지옥[rust 1.95/1.85/1.90 + cargo update 4번 다 다른 crate가 깨짐]이고 release exe도 없어 실행 불가. 4loop은 깔끔히 빌드[rust 1.95 + RUST_MIN_STACK], 비보북에 빌드 완료. 4loop은 README상 "자율 루프를 깨끗하게" 하려 만들어져 우리 목적과 정확히 일치.)
 - **구조 = ooo 그대로.** 의도→체크리스트(rubric)→생성→진화 루프는 ooo가 이미 한다. **딱 한 곳, 점검(평가)만 외부로 뺀다.**
-- **머리 = RightSeat(외부 검사관, Python).** worker가 못 보는 곳에서, seed에서 뽑은 측정 가능한 기준에 결과물 증거를 **TRUE/FALSE로 대조만** 한다. 판단이 아니라 대조라 멍청해도 된다(jd 철학: AI 임의판단 금지, 결정론 교차대조).
+- **머리 = RightSeat(외부 검사관, Python).** worker가 못 보는 곳에서, seed에서 뽑은 측정 가능한 기준에 결과물 증거를 **TRUE/FALSE로 대조만** 한다. 판단이 아니라 대조라 멍청해도 된다(jd 철학: AI 임의판단 금지, 결정론 교차대조). 구현은 **단순 프롬프트**(seed + 결과물 증거 → "맞나 / 교정 한 줄") — claude·codex 교체 가능, 실측 완료. completion_gate식 복잡 검증 파이프라인은 폐기(2026-06-21).
 - **증거 = 이미 가진 도구로.** 코드=test/typecheck, worker 행동=Sidabari Hook·PTY, UI=browse, 변경=diff/codex.
 - **연결 = 프로세스 경계.** Sidabari가 turn 경계에서 RightSeat(Python 검사관)를 호출. TS로 재구현하지 않는다.
 - **수동/자동 = 같은 시스템의 두 모드.** mode tier(paused/suggest/confirm/auto)가 다이얼. 검사관은 항상 켜져 있고, 바뀌는 건 "사람이 직접 입력하느냐"뿐. 매끄러운 전환은 양방향 공유 상태에 의존 — 떠날 때 seed(방향), 돌아올 때 ledger(주행기록).
 
 ## 성공기준 (됐다의 정의)
 
-- **검사관 머리(완성, 2026-06-20):** seed 합격기준 파싱 + 검사 흐름(`completion_gate`: 증거→패킷→기계게이트→외부대조→판정) + 외부 대조 백엔드(claude/codex). **운반 방식과 무관**하게 workdir만 받으면 돈다. 209 테스트 green.
-- **다음:** 그 머리를 Sidabari 몸에 연결 = worker를 PTY로 소유해 띄우고(그 폴더가 곧 workdir), turn 경계에서 검사 흐름을 프로세스로 호출. + 수동↔자동 전환.
+- **검사관 머리(실측 완료, 2026-06-21):** seed + 결과물 증거를 단순 프롬프트로 외부 대조 — claude·codex 둘 다 worker의 "완성" 거짓말 안 속고 drift(도메인 다름·소스 누락) 적발, 증거 없으면 FAIL, 교정 한 줄 냄. completion_gate 복잡 파이프라인은 폐기.
+- **다음:** 그 머리를 4loop 몸에 연결 = worker(claude 외 codex 등)를 PTY로 소유해 띄우고(**비보북 GUI + elitedesk worker via ssh**), turn 감지를 Claude Hook → **화면 idle 감지**로 바꿔 turn 경계에서 검사관(단순 프롬프트)을 프로세스로 호출. + 수동↔자동 전환.
 - **최종:** 작업 하나를 seed만 주고 돌려, 외부 채점자가 "seed에 합치"라고 통과시킨 결과물이 나온다. (양산 = 자동 모드 + 제품 작업의 한 사례로 따라옴)
 
 ## 비목표·제약 (하지 말 것)
@@ -52,6 +58,9 @@ canonical_path: self
 - 순서: 화려한 GUI(몸) 먼저 안 만든다. **검사관(머리) 먼저.**
 - **검사관을 tmux attach 루프에 꽂지 않는다(버릴 코드).** Sidabari 몸에 꽂는다.
 - **workdir 등 운반 세부를 tmux에서 캐내지 않는다.** worker를 PTY로 소유하면 띄운 폴더가 곧 workdir라 감지가 필요 없다. (2026-06-20 이 착오를 한 번 범했음 — 재발 금지.)
+- **원본 sidabari로 돌아가지 않는다(실측 확정).** 빌드 지옥 + release exe 없음 = 실행 불가. 베이스는 4loop. 원본에서 탐낸 ssh는 4loop PTY 명령에 `ssh elitedesk codex`를 끼우면 된다(의존성 풀세트 불필요).
+- **worker를 비보북에서 찾지 않는다.** worker는 elitedesk에서 돈다(비보북=GUI). worker용 codex는 elitedesk에 이미 있다(이 세션 검사관 실측에 썼음).
+- **검사관을 복잡한 검증으로 부풀리지 않는다.** seed 합치 + 교정 한 줄이면 된다. "LLM이 똑똑하냐"로 다시 새지 않는다.
 
 ## 흘러내리면 안 되는 확정 사실 (비교)
 
