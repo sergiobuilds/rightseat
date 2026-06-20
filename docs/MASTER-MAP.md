@@ -8,4 +8,5 @@
 
 ## 현재 상태·범위·진척
 - 의도 확정·박제(2026-06-20, [SEED](SEED.md)): Sidabari(몸)+ooo(구조)+RightSeat(외부 검사관 머리) 결합 방향.
-- 다음 한 걸음: 검사관 머리 완성 — `completion_check`/`verifier`를 `attach` 루프에 배선(Codex 권고 1~4단계).
+- 검사관 머리 완성(2026-06-20, 운반 독립, 209 테스트): seed 합격기준 파싱 + `completion_gate` 흐름 + claude/codex verifier 백엔드.
+- 다음 한 걸음: **Sidabari 몸 통합** — worker를 PTY로 소유해 띄우고(폴더가 곧 workdir) turn 경계에서 `completion_gate` 호출. tmux attach 배선은 폐기(버릴 코드).

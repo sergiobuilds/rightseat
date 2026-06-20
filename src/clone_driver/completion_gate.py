@@ -44,8 +44,9 @@ def run_completion_gate(
     """Worker가 done을 주장할 때 도는 결정론 완료 게이트.
 
     대조(verifier)와 산수(completion_check)만 한다. 판단하지 않는다.
-    worker의 자기평가는 입력이 아니다. 게이트 자리는 attach 루프 밖이라
-    worker가 채점자를 볼 수 없다.
+    worker의 자기평가는 입력이 아니다. 검사관은 worker가 보지 못하는 외부에
+    있어 worker가 채점자를 게임할 수 없다. 운반 방식(PTY 소유 등)과 무관하게
+    workdir만 받으면 동작한다.
     """
     if not acceptance_criteria:
         return GateOutcome(

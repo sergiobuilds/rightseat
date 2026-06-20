@@ -9,6 +9,11 @@ canonical_path: self
 
 > 이 프로젝트가 *무엇을 위한 것인가*의 단일 정본. 표류하면 여기로 돌아온다.
 > 2026-06-20 wiw로 박음. 의도가 바뀌면 이 파일을 in-place로 refine하고 변경 한 줄을 남긴다.
+>
+> 변경 로그:
+> - 2026-06-20 v1: 최초 박제.
+> - 2026-06-20 v1.1: 검사관 머리(파싱·흐름·외부대조) 운반 독립 완성. "다음=tmux attach 배선"은
+>   버린 길로의 회귀라 폐기 → "다음=Sidabari 몸 통합". workdir는 PTY 소유면 자명(tmux 감지 금지) 명시.
 
 ## 중심 의도 (한 줄)
 
@@ -30,7 +35,8 @@ canonical_path: self
 
 ## 성공기준 (됐다의 정의)
 
-- **먼저:** 외부 검사관(머리) 완성 = `completion_check`/검증이 `attach` 루프에 배선되고, "rubric ↔ 증거 ↔ 대조 ↔ 미달 시 재주입"이 실제로 돈다 + 수동↔자동 전환이 된다.
+- **검사관 머리(완성, 2026-06-20):** seed 합격기준 파싱 + 검사 흐름(`completion_gate`: 증거→패킷→기계게이트→외부대조→판정) + 외부 대조 백엔드(claude/codex). **운반 방식과 무관**하게 workdir만 받으면 돈다. 209 테스트 green.
+- **다음:** 그 머리를 Sidabari 몸에 연결 = worker를 PTY로 소유해 띄우고(그 폴더가 곧 workdir), turn 경계에서 검사 흐름을 프로세스로 호출. + 수동↔자동 전환.
 - **최종:** 작업 하나를 seed만 주고 돌려, 외부 채점자가 "seed에 합치"라고 통과시킨 결과물이 나온다. (양산 = 자동 모드 + 제품 작업의 한 사례로 따라옴)
 
 ## 비목표·제약 (하지 말 것)
@@ -44,15 +50,20 @@ canonical_path: self
 - 운반/tmux 코드를 자기방어로 붙들지 않는다(버림). 단 판단 규칙은 살린다.
 - 범위를 처음부터 넓히지 않는다. 토이 웹/CLI로 좁혀 시작(증거 수집이 깔끔한 범위).
 - 순서: 화려한 GUI(몸) 먼저 안 만든다. **검사관(머리) 먼저.**
+- **검사관을 tmux attach 루프에 꽂지 않는다(버릴 코드).** Sidabari 몸에 꽂는다.
+- **workdir 등 운반 세부를 tmux에서 캐내지 않는다.** worker를 PTY로 소유하면 띄운 폴더가 곧 workdir라 감지가 필요 없다. (2026-06-20 이 착오를 한 번 범했음 — 재발 금지.)
 
 ## 흘러내리면 안 되는 확정 사실 (비교)
 
 - **RightSeat 장점:** `policy_gate`(위험 fail-closed 방화벽, 실제 배선됨, attach.py:599) · `completion_check`(done 불신·증거기반, 단 미배선) · `screen_model`(화면 상태 파싱 ~5상태) · mode tier 런타임 토글 · 가시적 외부 감독석 · 자율 중에도 위험을 멈춤.
-- **RightSeat 약점:** tmux 갇힘 · GUI 없음 · `verifier` 껍데기(외부 명령 래퍼만) · `completion_check` 미배선(자기 테스트만 import) · 772줄 한 메서드 집중.
+- **RightSeat 약점:** tmux 갇힘(→ Sidabari 몸으로 대체 예정) · GUI 없음 · 772줄 attach 한 메서드 집중. (검사관 머리는 2026-06-20 완성: `verifier` 백엔드 추가·`completion_check`는 `completion_gate`로 흐름 조립됨. 남은 건 tmux가 아니라 Sidabari 몸에 연결.)
 - **Sidabari 장점:** PTY 소유 · bracketed paste 주입 · Windows shim · 진짜 데스크탑 GUI(Tauri+xterm+분할패널) · 자율 루프 골격(PROGRESS.md 계약) · 증거 캡처(Hook/PTY) · 완성도.
 - **Sidabari 약점:** 2차 LLM 판단 0개(고정 운영프롬프트 재주입) · 위험게이트=사람 모달 · 완료=worker 자기신고(TASK_COMPLETE 정규식) 신뢰 · 자율빌드는 깊이 안 판 곁가지.
 - **맥락:** cx8537(Ho-sung Choi)=1인 인프라 운영자(nullnull.co.kr LMS 운영, WinMux 제작). LLM을 안 넣은 건 무능이 아니라 철학(프로덕션은 AI 자동판단이 위험). 업계 전체가 ralph+결정론 검증을 씀 → 우리 차별점은 **외부·불가시 채점자(seed 정합성)** 하나.
 
 ## 다음 한 걸음
 
-검사관(RightSeat 머리) 마저 완성 — `completion_check`/`verifier`를 `attach` 루프 생명주기에 배선(Codex 권고 1~4단계). 그 다음에 Sidabari 몸에 전화선(프로세스 호출) 달기.
+검사관 머리는 완성(2026-06-20, 운반 독립, 209 테스트 green). 다음은 **Sidabari 몸 통합**:
+worker를 PTY로 소유해 띄우고(그 폴더가 곧 workdir — tmux 감지 불필요), turn 경계에서
+`completion_gate`를 프로세스로 호출해 결과(complete/inject/escalate)대로 운전. tmux attach.py는
+배선 대상이 아니다(버릴 코드).
