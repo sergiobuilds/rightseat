@@ -14,6 +14,12 @@ canonical_path: self
 > - 2026-06-20 v1: 최초 박제.
 > - 2026-06-20 v1.1: 검사관 머리(파싱·흐름·외부대조) 운반 독립 완성. "다음=tmux attach 배선"은
 >   버린 길로의 회귀라 폐기 → "다음=Sidabari 몸 통합". workdir는 PTY 소유면 자명(tmux 감지 금지) 명시.
+> - 2026-06-21 v1.3: "머리 달기" 구현(sidabari4loop). ① 검사관 선택 UI(worker 동형 드롭다운)·
+>   ② 화면 idle 턴 감지·③ 턴 경계 검사관 호출(stdin 단순 프롬프트→OK/교정, 교정이면 PTY 주입) 코드 투입,
+>   TS 빌드·테스트(23) 통과. SEED 대비 구현상 좁힘 2건: **(a) "claude=Hook"을 '로컬 claude만'으로 좁힘**
+>   — ssh worker의 훅은 원격에 쓰여 GUI에 안 닿으므로 ssh 전부 idle. **(b) idle(ssh) worker는 /clear·
+>   /compact 슬래시명령 불가 → 리셋을 none으로 강제.** Rust(run_inspector 등) 컴파일은 elitedesk에 툴체인
+>   없어 미검증(비보북 빌드 대기). GUI 실측 미완(아침 Sergio). 둘 다 SEED와 모순 아닌 정합 refine.
 > - 2026-06-21 v1.2: 실측으로 3건 확정. ① 몸=**sidabari4loop**(원본 아님 — 원본은 비보북 빌드
 >   지옥[rust 4버전 실패·release exe 없음]=실행 불가, 4loop은 깔끔). ② 검사관=**단순 프롬프트**
 >   (seed+증거→맞나/교정 한 줄, claude·codex 교체 실측) — completion_gate 복잡 파이프라인 폐기.
@@ -72,7 +78,8 @@ canonical_path: self
 
 ## 다음 한 걸음
 
-검사관 머리는 완성(2026-06-20, 운반 독립, 209 테스트 green). 다음은 **Sidabari 몸 통합**:
-worker를 PTY로 소유해 띄우고(그 폴더가 곧 workdir — tmux 감지 불필요), turn 경계에서
-`completion_gate`를 프로세스로 호출해 결과(complete/inject/escalate)대로 운전. tmux attach.py는
-배선 대상이 아니다(버릴 코드).
+머리 달기(sidabari4loop 통합) 코드는 투입 완료(2026-06-21 v1.3, TS 빌드·테스트 green). 다음은
+**비보북 GUI 실측**: 4loop을 비보북에서 빌드(Rust 포함)→실행→worker=Codex(elitedesk ssh)·검사관=Claude로
+골라 자율 루프를 돌려 "codex가 일하고, 화면 idle로 턴을 잡고, 외부 검사관이 seed 보고 OK/교정 주입"이
+실제로 도는지 확인한다. 깨지는 지점(특히 idle 12초 임계가 mid-turn에 오발화하는지, ssh-stdin 검사관 경로)을
+실측으로 조정한다. 운반/tmux attach.py는 배선 대상이 아니다(버릴 코드).
